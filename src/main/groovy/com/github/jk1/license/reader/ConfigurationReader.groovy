@@ -20,9 +20,12 @@ import com.github.jk1.license.LicenseReportExtension
 import com.github.jk1.license.task.ReportTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+
+import java.util.stream.Collectors
 
 import static com.github.jk1.license.reader.ProjectReader.isResolvable
 
@@ -31,10 +34,12 @@ class ConfigurationReader {
 
     private LicenseReportExtension config
     private ModuleReader moduleReader
+    private FileDependencyReader fileReader
 
     ConfigurationReader(LicenseReportExtension config, ModuleReader moduleReader) {
         this.config = config
         this.moduleReader = moduleReader
+        fileReader = new FileDependencyReader(config)
     }
 
     ConfigurationData read(Project project, Configuration configuration) {
@@ -58,6 +63,18 @@ class ConfigurationReader {
         for (ResolvedDependency dependency : dependencies) {
             LOGGER.debug("Processing dependency: $dependency")
             data.dependencies.add(moduleReader.read(project, dependency))
+        }
+
+        // scan all file dependencies, if the feature is activated
+        if(config.scanFiles) {
+            Set<File> fileDependencies = configuration.allDependencies.stream().filter { it instanceof FileCollectionDependency }
+                    .map { ((FileCollectionDependency) it).getFiles().getFiles() }.flatMap { it.stream() }
+                    .collect(Collectors.toSet())
+            LOGGER.info("Processing files for configuration [$configuration]: " + fileDependencies.join(','))
+            for (File file : fileDependencies) {
+                LOGGER.debug("Processing file dependency: $file")
+                data.dependencies.add(fileReader.read(project, file))
+            }
         }
         return data
     }

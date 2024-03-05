@@ -49,8 +49,8 @@ class ModuleReaderImpl implements ModuleReader {
             LOGGER.info("Processing artifact: $artifact ($artifact.file)")
             if (artifact.file.exists()){
                 def pom = pomReader.readPomData(project, artifact)
-                def manifest = manifestReader.readManifestData(artifact)
-                def licenseFile = filesReader.read(artifact)
+                def manifest = manifestReader.readManifestData(artifact.file)
+                def licenseFile = filesReader.read(artifact.file)
 
                 if (pom) moduleData.poms << pom
                 if (manifest) moduleData.manifests << manifest

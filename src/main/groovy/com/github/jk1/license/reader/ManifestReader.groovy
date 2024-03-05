@@ -19,7 +19,6 @@ import com.github.jk1.license.LicenseReportExtension
 import com.github.jk1.license.ManifestData
 import com.github.jk1.license.task.ReportTask
 import com.github.jk1.license.util.Files
-import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
@@ -39,29 +38,29 @@ class ManifestReader {
         this.config = config
     }
 
-    ManifestData readManifestData(ResolvedArtifact artifact) {
-        String fileExtension = Files.getExtension(artifact.file.name)?.toLowerCase()
+    ManifestData readManifestData(File file) {
+        String fileExtension = Files.getExtension(file.name)?.toLowerCase()
         if (!fileExtension) {
-            LOGGER.debug("No file extension found for file: $artifact.file")
+            LOGGER.debug("No file extension found for file: ${file}")
             return null
         }
         switch (fileExtension) {
             case "mf":
-                LOGGER.debug("Processing manifest file: $artifact.file")
-                Manifest mf = new Manifest(artifact.file.newInputStream())
+                LOGGER.debug("Processing manifest file: ${file}")
+                Manifest mf = new Manifest(file.newInputStream())
                 return manifestToData(mf)
             case "jar":
             case "zip":
-                LOGGER.debug("Processing manifest from archive file: $artifact.file")
-                Manifest mf = lookupManifest(artifact.file)
+                LOGGER.debug("Processing manifest from archive file: ${file}")
+                Manifest mf = lookupManifest(file)
                 if (mf) {
                     ManifestData data = manifestToData(mf)
-                    def path = findLicenseFile(artifact.file, data.license)
+                    def path = findLicenseFile(file, data.license)
                     if (path != null){
                         data.hasPackagedLicense = true
-                        File dest = new File(config.outputDir, "${artifact.file.name}/${data.license}.html")
-                        data.url="${artifact.file.name}/${data.license}.html"
-                        writeLicenseFile(artifact.file, path, dest)
+                        File dest = new File(config.outputDir, "${file.name}/${data.license}.html")
+                        data.url="${file.name}/${data.license}.html"
+                        writeLicenseFile(file, path, dest)
                     }
                     return data
                 }

@@ -37,16 +37,16 @@ class LicenseFilesReader {
         this.config = config
     }
 
-    LicenseFileData read(ResolvedArtifact artifact) {
-        String fileExtension = Files.getExtension(artifact.file.name)?.toLowerCase()
+    LicenseFileData read(File file) {
+        String fileExtension = Files.getExtension(file.name)?.toLowerCase()
         if (!fileExtension) {
-            LOGGER.debug("No file extension found for file: $artifact.file")
+            LOGGER.debug("No file extension found for file: ${file}")
             return null
         }
         switch (fileExtension) {
             case "zip":
             case "jar":
-                Collection<String> files = readLicenseFiles(artifact, new ZipFile(artifact.file, ZipFile.OPEN_READ))
+                Collection<String> files = readLicenseFiles(file, new ZipFile(file, ZipFile.OPEN_READ))
                 if (files.isEmpty()) return null
 
                 def data = new LicenseFileData()
@@ -60,7 +60,7 @@ class LicenseFilesReader {
         }
     }
 
-    private Collection<String> readLicenseFiles(ResolvedArtifact artifact, ZipFile zipFile) {
+    private Collection<String> readLicenseFiles(File artifact, ZipFile zipFile) {
         Set<String> licenseFileBaseNames = [
                 "license",
                 "readme",
@@ -81,7 +81,7 @@ class LicenseFilesReader {
         return entryNames.collect { ZipEntry entry ->
             String entryName = entry.name
             if (!entryName.startsWith("/")) entryName = "/$entryName"
-            String path = "${artifact.file.name}${entryName}"
+            String path = "${artifact.name}${entryName}"
             File file = new File(config.outputDir, path)
             file.parentFile.mkdirs()
             file.text = zipFile.getInputStream(entry).text

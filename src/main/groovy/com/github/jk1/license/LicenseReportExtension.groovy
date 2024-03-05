@@ -37,6 +37,7 @@ class LicenseReportExtension {
     public String[] configurations
     public boolean excludeOwnGroup
     public boolean excludeBoms
+    public boolean scanFiles
     public String[] excludeGroups
     public String[] excludes
     public Object allowedLicensesFile
@@ -50,6 +51,7 @@ class LicenseReportExtension {
             project.getPlugins().hasPlugin('com.android.application') ? ['releaseRuntimeClasspath'] : ['runtimeClasspath']
         excludeOwnGroup = true
         excludeBoms = false // false - for backwards compatibility
+        scanFiles = false // disabled by default - for backwards compatibility
         excludeGroups = []
         excludes = []
         importers = []
